@@ -1,0 +1,6 @@
+data/HIC/data
+data/InterHand26M/images
+data/InterHand26M/annotations
+data/MSCOCO/images
+data/MSCOCO/annotations
+demo/snapshot_6.pth
