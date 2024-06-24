@@ -108,32 +108,40 @@ class Trainer(Base):
     def _make_batch_generator(self):
         # data load and construct batch generator
         self.logger.info("Creating dataset...")
+
+        # load train data
         trainset3d_loader = []
         for i in range(len(cfg.trainset_3d)):
+            self.logger.info("Loading " + cfg.trainset_3d[i] + " train set...")
             trainset3d_loader.append(eval(cfg.trainset_3d[i])(transforms.ToTensor(), "train"))
         trainset2d_loader = []
         for i in range(len(cfg.trainset_2d)):
+            self.logger.info("Loading " + cfg.trainset_2d[i] + " train set...")
             trainset2d_loader.append(eval(cfg.trainset_2d[i])(transforms.ToTensor(), "train"))
 
-        valid_loader_num = 0
+        valid_train_loader_num = 0
         if len(trainset3d_loader) > 0:
             trainset3d_loader = [MultipleDatasets(trainset3d_loader, make_same_len=False)]
-            valid_loader_num += 1
+            valid_train_loader_num += 1
         else:
             trainset3d_loader = []
         if len(trainset2d_loader) > 0:
             trainset2d_loader = [MultipleDatasets(trainset2d_loader, make_same_len=False)]
-            valid_loader_num += 1
+            valid_train_loader_num += 1
         else:
             trainset2d_loader = []
 
-        if valid_loader_num > 1:
+        if valid_train_loader_num > 1:
             trainset_loader = MultipleDatasets(trainset3d_loader + trainset2d_loader, make_same_len=True)
         else:
             trainset_loader = MultipleDatasets(trainset3d_loader + trainset2d_loader, make_same_len=False)
 
+        valset_loader = trainset_loader[-cfg.val_set_size:]
+        #trainset_loader = trainset_loader[:-cfg.val_set_size]
+
         self.itr_per_epoch = math.ceil(len(trainset_loader) / cfg.num_gpus / cfg.train_batch_size)
         self.batch_generator = DataLoader(dataset=trainset_loader, batch_size=cfg.num_gpus*cfg.train_batch_size, shuffle=True, num_workers=cfg.num_thread, pin_memory=True, drop_last=True)
+        self.val_generator = DataLoader(dataset=valset_loader, batch_size=cfg.num_gpus*cfg.val_batch_size, shuffle=True, num_workers=cfg.num_thread, pin_memory=True, drop_last=True)
 
     def _make_model(self):
         # prepare network
@@ -186,5 +194,28 @@ class Tester(Base):
 
     def _print_eval_result(self, eval_result):
         self.testset.print_eval_result(eval_result)
+
+class Validator(Base):
+    def __init__(self):
+        super(Validator, self).__init__(log_name = 'val_logs.txt')
+
+    def _make_batch_generator(self):
+        # data load and construct batch generator
+        self.logger.info("Creating dataset...")
+        valset_loader = eval(cfg.valset)(transforms.ToTensor(), "test")
+        batch_generator = DataLoader(dataset=valset_loader, batch_size=cfg.num_gpus*cfg.test_batch_size, shuffle=False, num_workers=cfg.num_thread, pin_memory=True)
+        
+        self.valset = valset_loader
+        self.batch_generator = batch_generator
+
+    def _set_model(self, model):
+        self.model = model
+    
+    def _evaluate(self, outs, cur_sample_idx):
+        eval_result = self.valset.evaluate(outs, cur_sample_idx)
+        return eval_result
+
+    def _print_eval_result(self, eval_result):
+        self.valset.print_eval_result(eval_result)
 
 

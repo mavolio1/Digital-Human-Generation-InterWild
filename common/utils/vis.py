@@ -140,7 +140,7 @@ def save_obj(v, f, file_name='output.obj'):
 def render_mesh_orthogonal(mesh, face, cam_param, render_shape, hand_type):
     batch_size, vertex_num = mesh.shape[:2]
 
-    textures = TexturesVertex(verts_features=torch.ones((batch_size,vertex_num,3)).float().cuda())
+    textures = TexturesVertex(verts_features=torch.ones((batch_size,vertex_num,3)).float().cpu())
     mesh = torch.stack((-mesh[:,:,0], -mesh[:,:,1], mesh[:,:,2]),2) # reverse x- and y-axis following PyTorch3D axis direction
     mesh = Meshes(mesh, face, textures)
     
@@ -148,9 +148,9 @@ def render_mesh_orthogonal(mesh, face, cam_param, render_shape, hand_type):
                                 principal_point=cam_param['princpt'], 
                                 device='cuda',
                                 in_ndc=False,
-                                image_size=torch.LongTensor(render_shape).cuda().view(1,2))
+                                image_size=torch.LongTensor(render_shape).cpu().view(1,2))
     raster_settings = RasterizationSettings(image_size=render_shape, blur_radius=0.0, faces_per_pixel=1)#, perspective_correct=True)
-    rasterizer = MeshRasterizer(cameras=cameras, raster_settings=raster_settings).cuda()
+    rasterizer = MeshRasterizer(cameras=cameras, raster_settings=raster_settings).cpu()
     lights = PointLights(device='cuda')
     shader = SoftPhongShader(device='cuda', cameras=cameras, lights=lights)
     if hand_type == 'right':
@@ -177,7 +177,7 @@ def render_mesh_orthogonal(mesh, face, cam_param, render_shape, hand_type):
 def render_mesh_perspective(mesh, face, cam_param, render_shape, hand_type):
     batch_size, vertex_num = mesh.shape[:2]
 
-    textures = TexturesVertex(verts_features=torch.ones((batch_size,vertex_num,3)).float().cuda())
+    textures = TexturesVertex(verts_features=torch.ones((batch_size,vertex_num,3)).float().cpu())
     mesh = torch.stack((-mesh[:,:,0], -mesh[:,:,1], mesh[:,:,2]),2) # reverse x- and y-axis following PyTorch3D axis direction
     mesh = Meshes(mesh, face, textures)
     
@@ -185,9 +185,9 @@ def render_mesh_perspective(mesh, face, cam_param, render_shape, hand_type):
                                 principal_point=cam_param['princpt'], 
                                 device='cuda',
                                 in_ndc=False,
-                                image_size=torch.LongTensor(render_shape).cuda().view(1,2))
+                                image_size=torch.LongTensor(render_shape).cpu().view(1,2))
     raster_settings = RasterizationSettings(image_size=render_shape, blur_radius=0.0, faces_per_pixel=1)#, perspective_correct=True)
-    rasterizer = MeshRasterizer(cameras=cameras, raster_settings=raster_settings).cuda()
+    rasterizer = MeshRasterizer(cameras=cameras, raster_settings=raster_settings).cpu()
     lights = PointLights(device='cuda')
     shader = SoftPhongShader(device='cuda', cameras=cameras, lights=lights)
     if hand_type == 'right':

@@ -53,8 +53,8 @@ def soft_argmax_2d(heatmap2d):
     accu_x = heatmap2d.sum(dim=(2))
     accu_y = heatmap2d.sum(dim=(3))
 
-    accu_x = accu_x * torch.arange(width).float().cuda()[None,None,:]
-    accu_y = accu_y * torch.arange(height).float().cuda()[None,None,:]
+    accu_x = accu_x * torch.arange(width).float().cpu()[None,None,:]
+    accu_y = accu_y * torch.arange(height).float().cpu()[None,None,:]
 
     accu_x = accu_x.sum(dim=2, keepdim=True)
     accu_y = accu_y.sum(dim=2, keepdim=True)
@@ -73,9 +73,9 @@ def soft_argmax_3d(heatmap3d):
     accu_y = heatmap3d.sum(dim=(2,4))
     accu_z = heatmap3d.sum(dim=(3,4))
 
-    accu_x = accu_x * torch.arange(width).float().cuda()[None,None,:]
-    accu_y = accu_y * torch.arange(height).float().cuda()[None,None,:]
-    accu_z = accu_z * torch.arange(depth).float().cuda()[None,None,:]
+    accu_x = accu_x * torch.arange(width).float().cpu()[None,None,:]
+    accu_y = accu_y * torch.arange(height).float().cpu()[None,None,:]
+    accu_z = accu_z * torch.arange(depth).float().cpu()[None,None,:]
 
     accu_x = accu_x.sum(dim=2, keepdim=True)
     accu_y = accu_y.sum(dim=2, keepdim=True)

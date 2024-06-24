@@ -44,7 +44,7 @@ class RotationNet(nn.Module):
     def get_root_trans(self, cam_param):
         t_xy = cam_param[:,:2]
         gamma = torch.sigmoid(cam_param[:,2]) # apply sigmoid to make it positive
-        k_value = torch.FloatTensor([math.sqrt(cfg.focal[0]*cfg.focal[1]*cfg.camera_3d_size*cfg.camera_3d_size/(cfg.input_hand_shape[0]*cfg.input_hand_shape[1]))]).cuda().view(-1)
+        k_value = torch.FloatTensor([math.sqrt(cfg.focal[0]*cfg.focal[1]*cfg.camera_3d_size*cfg.camera_3d_size/(cfg.input_hand_shape[0]*cfg.input_hand_shape[1]))]).cpu().view(-1)
         t_z = k_value * gamma
         root_trans = torch.cat((t_xy, t_z[:,None]),1)
         return root_trans
@@ -87,7 +87,7 @@ class TransNet(nn.Module):
         ymin = y_center - 0.5 * height * 1.2
         ymax = y_center + 0.5 * height * 1.2
 
-        bbox = torch.stack((xmin, ymin, xmax, ymax),1).float().cuda()
+        bbox = torch.stack((xmin, ymin, xmax, ymax),1).float().cpu()
         return bbox
     
     def render_gaussian_heatmap(self, joint_coord):
@@ -95,7 +95,7 @@ class TransNet(nn.Module):
         y = torch.arange(cfg.input_hm_shape[1])
         z = torch.arange(cfg.input_hm_shape[0])
         zz,yy,xx = torch.meshgrid(z,y,x)
-        xx = xx[None,None,:,:,:].cuda().float(); yy = yy[None,None,:,:,:].cuda().float(); zz = zz[None,None,:,:,:].cuda().float();
+        xx = xx[None,None,:,:,:].cpu().float(); yy = yy[None,None,:,:,:].cpu().float(); zz = zz[None,None,:,:,:].cpu().float();
         
         x = joint_coord[:,:,0,None,None,None]; y = joint_coord[:,:,1,None,None,None]; z = joint_coord[:,:,2,None,None,None];
         heatmap = torch.exp(-(((xx-x)/cfg.sigma)**2)/2 -(((yy-y)/cfg.sigma)**2)/2 - (((zz-z)/cfg.sigma)**2)/2)
@@ -130,10 +130,10 @@ class TransNet(nn.Module):
 
     def crop_and_resize(self, coord, bbox):
         batch_size = bbox.shape[0]
-        transl = torch.FloatTensor([cfg.input_hm_shape[2]/2, cfg.input_hm_shape[1]/2]).cuda()[None,:] - (bbox[:,:2] + bbox[:,2:])/2
+        transl = torch.FloatTensor([cfg.input_hm_shape[2]/2, cfg.input_hm_shape[1]/2]).cpu()[None,:] - (bbox[:,:2] + bbox[:,2:])/2
         center = (bbox[:,:2] + bbox[:,2:])/2
         scale = torch.stack([cfg.input_hm_shape[2]/(bbox[:,2]-bbox[:,0]+1e-8), cfg.input_hm_shape[1]/(bbox[:,3]-bbox[:,1]+1e-8)],1)
-        angle = torch.zeros((batch_size)).float().cuda()
+        angle = torch.zeros((batch_size)).float().cpu()
         orig2hm_trans = kornia.geometry.transform.get_affine_matrix2d(transl, center, scale, angle)[:,:2,:]
         
         xy1 = torch.stack((coord[:,:,0], coord[:,:,1], torch.ones_like(coord[:,:,0])),2)
@@ -238,10 +238,10 @@ class HandRoI(nn.Module):
         bbox[:,2] = bbox[:,2] / cfg.input_body_shape[1] * cfg.input_img_shape[1]
         bbox[:,3] = bbox[:,3] / cfg.input_body_shape[0] * cfg.input_img_shape[0]
         
-        transl = torch.FloatTensor([cfg.input_hand_shape[1]/2, cfg.input_hand_shape[0]/2]).cuda()[None,:] - (bbox[:,:2] + bbox[:,2:])/2
+        transl = torch.FloatTensor([cfg.input_hand_shape[1]/2, cfg.input_hand_shape[0]/2]).cpu()[None,:] - (bbox[:,:2] + bbox[:,2:])/2
         center = (bbox[:,:2] + bbox[:,2:])/2
         scale = torch.stack([cfg.input_hand_shape[1]/(bbox[:,2]-bbox[:,0]+1e-8), cfg.input_hand_shape[0]/(bbox[:,3]-bbox[:,1]+1e-8)],1)
-        angle = torch.zeros((batch_size)).float().cuda()
+        angle = torch.zeros((batch_size)).float().cpu()
         orig2hand_trans = kornia.geometry.transform.get_affine_matrix2d(transl, center, scale, angle)
         hand2orig_trans = torch.inverse(orig2hand_trans)[:,:2,:]
         orig2hand_trans = orig2hand_trans[:,:2,:]

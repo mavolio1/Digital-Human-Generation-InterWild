@@ -13,9 +13,10 @@ import numpy as np
 class Config:
     
     ## dataset (InterHand26M, MSCOCO, ReInterHand, HIC)
-    trainset_3d = ['InterHand26M', 'ReInterHand'] 
+    trainset_3d = ['InterHand26M'] 
     trainset_2d = ['MSCOCO']
-    testset = 'HIC'
+    valset = 'InterHand26M'
+    testset = 'InterHand26M'
 
     ## model setting
     body_resnet_type = 50
@@ -23,12 +24,12 @@ class Config:
     trans_resnet_type = 18
     
     ## input, output
-    input_img_shape = (512, 384)
-    input_body_shape = (256, 192)
-    input_hand_shape = (256, 256)
-    input_hm_shape = (64, 64, 64)
-    output_body_hm_shape = (8, 64, 48)
-    output_hand_hm_shape = (8, 8, 8)
+    input_img_shape = (1024, 768) # (512, 384)
+    input_body_shape = (256, 192) # (256, 192)
+    input_hand_shape = (256, 256) # (256, 256)
+    input_hm_shape = (64, 64, 64) # (64, 64, 64)
+    output_body_hm_shape = (8, 64, 48) # (8, 64, 48)
+    output_hand_hm_shape = (8, 8, 8) # (8, 8, 8)
     focal = (5000, 5000) # virtual focal lengths
     princpt = (input_hand_shape[1]/2, input_hand_shape[0]/2) # virtual principal point position
     bbox_3d_size = 0.3
